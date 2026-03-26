@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品指标智能分析平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .stat-change {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            color: #48bb78;
+        }
+
+        .stat-change.negative {
+            color: #f56565;
+        }
+
+        /* 图表网格 */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            color: #2d3748;
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        /* 报告区域 */
+        .report-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .report-content {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .report-content h4 {
+            color: #2d3748;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .report-content p {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .report-content ul {
+            margin-left: 24px;
+            color: #4a5568;
+            line-height: 2;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-item .name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .metric-item .value {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .metric-item .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.achieved {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .status.warning {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .status.danger {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        /* 数据表格 */
+        .data-table-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        /* 标签 */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .badge.primary {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+
+        .badge.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        /* AI助手样式 */
+        .ai-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ai-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .ai-response {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                flex-direction: column;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header fade-in">
+            <h1>📊 产品指标智能分析平台</h1>
+            <p>基于AI的智能数据分析与可视化工具 | 场景：AI搜索分析 & KSF指标达成分析</p>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="search-section fade-in">
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 输入关键词搜索指标（如：活跃率、留存率、设备量...）">
+                <button class="btn btn-primary" onclick="handleSearch()">AI智能分析</button>
+                <button class="btn btn-secondary" onclick="resetFilters()">重置筛选</button>
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="productFilter">
+                    <option value="">全部产品</option>
+                </select>
+                <select class="filter-select" id="dimensionFilter">
+                    <option value="">全部维度</option>
+                    <option value="基础数据">基础数据</option>
+                    <option value="运营指标">运营指标</option>
+                </select>
+                <select class="filter-select" id="timeFilter">
+                    <option value="">全部时间段</option>
+                    <option value="2026-02-23至2026-03-01">2026-02-23至2026-03-01</option>
+                    <option value="2026-03-02至2026-03-08">2026-03-02至2026-03-08</option>
+                    <option value="2026-03-09至2026-03-15">2026-03-09至2026-03-15</option>
+                    <option value="2026-03-16至2026-03-22">2026-03-16至2026-03-22</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- AI智能分析助手 -->
+        <div class="ai-section fade-in">
+            <div class="ai-header">
+                <div class="ai-avatar">🤖</div>
+                <div>
+                    <h3 style="color: #2d3748; font-size: 20px;">AI智能分析助手</h3>
+                    <p style="color: #718096; font-size: 14px;">基于数据分析自动生成洞察报告</p>
+                </div>
+            </div>
+            <div class="ai-response" id="aiResponse">
+                <p style="color: #4a5568; line-height: 1.8;">
+                    👋 您好！我是AI智能分析助手。基于当前数据，我可以帮您：<br><br>
+                    • <strong>搜索指标</strong>：输入关键词快速定位相关指标<br>
+                    • <strong>趋势分析</strong>：分析指标在不同时间段的变化趋势<br>
+                    • <strong>达成分析</strong>：评估KSF指标的达成情况<br>
+                    • <strong>生成报告</strong>：自动生成数据洞察和分析报告<br><br>
+                    请在上方输入您想分析的指标或问题！
+                </p>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid fade-in" id="statsGrid">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="charts-grid fade-in">
+            <div class="chart-card">
+                <h3>📈 指标趋势对比（折线图）</h3>
+                <div class="chart-container">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>📊 各维度指标分布（柱状图）</h3>
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>🎯 指标达成率分析（饼图）</h3>
+                <div class="chart-container">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>📉 指标变化幅度（雷达图）</h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="data-table-container fade-in">
+            <h3 style="color: #2d3748; margin-bottom: 20px; font-size: 20px;">📋 详细数据表格</h3>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>产品名称</th>
+                        <th>指标维度</th>
+                        <th>指标名称</th>
+                        <th>2026-02-23至2026-03-01</th>
+                        <th>2026-03-02至2026-03-08</th>
+                        <th>2026-03-09至2026-03-15</th>
+                        <th>2026-03-16至2026-03-22</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 动态生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- KSF指标达成分析报告 -->
+        <div class="report-section fade-in">
+            <div class="report-header">
+                <div>
+                    <h3 style="color: #2d3748; font-size: 24px; margin-bottom: 8px;">🎯 KSF指标达成分析报告</h3>
+                    <p style="color: #718096;">结合目标值与实际数据，评估指标达成情况</p>
+                </div>
+                <button class="btn btn-primary" onclick="exportReport()">📥 导出报告</button>
+            </div>
+
+            <div class="report-content" id="reportContent">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据
+        let rawData = [];
+        let filteredData = [];
+
+        // 初始化数据
+        function initData() {
+            // 从Excel读取的数据
+            rawData = [
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "累计安装设备量",
+                    "2026-02-23至2026-03-01": "34774221",
+                    "2026-03-02至2026-03-08": "38282463",
+                    "2026-03-09至2026-03-15": "38516013",
+                    "2026-03-16至2026-03-22": "38774949"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "累计安装且开机设备量",
+                    "2026-02-23至2026-03-01": "18914481",
+                    "2026-03-02至2026-03-08": "19863336",
+                    "2026-03-09至2026-03-15": "18947835",
+                    "2026-03-16至2026-03-22": "18941208"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "累计开机且激活设备量",
+                    "2026-02-23至2026-03-01": "9471080",
+                    "2026-03-02至2026-03-08": "9602537",
+                    "2026-03-09至2026-03-15": "9326352",
+                    "2026-03-16至2026-03-22": "9457316"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "非影视场景活跃设备量",
+                    "2026-02-23至2026-03-01": "4325600",
+                    "2026-03-02至2026-03-08": "4123400",
+                    "2026-03-09至2026-03-15": "3798381",
+                    "2026-03-16至2026-03-22": "4002448"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "非影视场景人均交互次数",
+                    "2026-02-23至2026-03-01": "10.61",
+                    "2026-03-02至2026-03-08": "10.00",
+                    "2026-03-09至2026-03-15": "9.48",
+                    "2026-03-16至2026-03-22": "9.36"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "基础数据",
+                    "指标名称": "非影视场景人均交互天数",
+                    "2026-02-23至2026-03-01": "2.26",
+                    "2026-03-02至2026-03-08": "2.19",
+                    "2026-03-09至2026-03-15": "2.18",
+                    "2026-03-16至2026-03-22": "2.26"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "非影视场景活跃率",
+                    "2026-02-23至2026-03-01": "45.67%",
+                    "2026-03-02至2026-03-08": "42.94%",
+                    "2026-03-09至2026-03-15": "40.73%",
+                    "2026-03-16至2026-03-22": "42.32%"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "非影视场景留存率",
+                    "2026-02-23至2026-03-01": "52.03%",
+                    "2026-03-02至2026-03-08": "56.58%",
+                    "2026-03-09至2026-03-15": "56.69%",
+                    "2026-03-16至2026-03-22": "61.64%"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.1讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "爱宠哈基米,131935",
+                    "2026-03-02至2026-03-08": "爱宠哈基米,58650",
+                    "2026-03-09至2026-03-15": "爱宠哈基米,49392",
+                    "2026-03-16至2026-03-22": "爱宠哈基米,49334"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.2讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "爱宠乐乐,66007",
+                    "2026-03-02至2026-03-08": "爱宠乐乐,50626",
+                    "2026-03-09至2026-03-15": "爱宠乐乐,37080",
+                    "2026-03-16至2026-03-22": "爱宠乐乐,42538"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.3讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "看图猜谜-星澜,55146",
+                    "2026-03-02至2026-03-08": "看图猜谜-星澜,26878",
+                    "2026-03-09至2026-03-15": "奇遇话伴-悟空,23320",
+                    "2026-03-16至2026-03-22": "奇遇话伴-悟空,29544"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.4讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "奇遇话伴-悟空,32094",
+                    "2026-03-02至2026-03-08": "奇遇话伴-悟空,24713",
+                    "2026-03-09至2026-03-15": "看图猜谜-星澜,19488",
+                    "2026-03-16至2026-03-22": "看图猜谜-星澜,26001"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.5讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "爱宠陪伴,20997",
+                    "2026-03-02至2026-03-08": "爱宠陪伴,16878",
+                    "2026-03-09至2026-03-15": "爱宠陪伴,13425",
+                    "2026-03-16至2026-03-22": "爱宠陪伴,13290"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.6讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "小数学家-爱烁,12447",
+                    "2026-03-02至2026-03-08": "小数学家-爱烁,10089",
+                    "2026-03-09至2026-03-15": "法律知识科普,10613",
+                    "2026-03-16至2026-03-22": "法律知识科普,10883"
+                },
+                {
+                    "产品名称": "智慧生活包（大模型）",
+                    "指标维度": "运营指标",
+                    "指标名称": "NO.7讯飞子智能体总交互次数",
+                    "2026-02-23至2026-03-01": "徕吧对战,12094",
+                    "2026-03-02至2026-03-08": "陪你读书,9716",
+                    "2026-03-09至2026-03-15": "小数学家-爱烁,10264",
+                    "2026-03-16至2026-03-22": "陪你读书,10129"
+                }
+            ];
+
+            filteredData = [...rawData];
+            populateFilters();
+            renderAll();
+        }
+
+        // 填充筛选器
+        function populateFilters() {
+            const products = [...new Set(rawData.map(item => item['产品名称']))];
+            const productFilter = document.getElementById('productFilter');
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product;
+                option.textContent = product;
+                productFilter.appendChild(option);
+            });
+        }
+
+        // 筛选数据
+        function filterData() {
+            const product = document.getElementById('productFilter').value;
+            const dimension = document.getElementById('dimensionFilter').value;
+            const time = document.getElementById('timeFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredData = rawData.filter(item => {
+                const matchProduct = !product || item['产品名称'] === product;
+                const matchDimension = !dimension || item['指标维度'] === dimension;
+                const matchSearch = !search || item['指标名称'].toLowerCase().includes(search);
+                return matchProduct && matchDimension && matchSearch;
+            });
+
+            renderAll();
+        }
+
+        // AI搜索处理
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (!searchTerm.trim()) {
+                showAIResponse("请输入要搜索的关键词或问题！");
+                return;
+            }
+
+            filterData();
+
+            const matchedItems = filteredData.filter(item =>
+                item['指标名称'].toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            let response = `<h4>🔍 搜索结果：</h4><p>找到 <strong>${matchedItems.length}</strong> 条与 "<strong>${searchTerm}</strong>" 相关的数据：</p><ul>`;
+
+            matchedItems.forEach(item => {
+                response += `<li><strong>${item['指标名称']}</strong> (${item['指标维度']})</li>`;
+            });
+
+            response += '</ul>';
+
+            // 添加趋势分析
+            if (matchedItems.length > 0) {
+                response += '<h4 style="margin-top: 20px;">📈 趋势分析：</h4><ul>';
+                matchedItems.forEach(item => {
+                    const values = getNumericValues(item);
+                    if (values.length >= 2) {
+                        const trend = calculateTrend(values);
+                        response += `<li>${item['指标名称']}: ${trend}</li>`;
+                    }
+                });
+                response += '</ul>';
+            }
+
+            showAIResponse(response);
+        }
+
+        // 获取数值
+        function getNumericValues(item) {
+            const times = ['2026-02-23至2026-03-01', '2026-03-02至2026-03-08', '2026-03-09至2026-03-15', '2026-03-16至2026-03-22'];
+            return times.map(t => parseFloat(item[t])).filter(v => !isNaN(v));
+        }
+
+        // 计算趋势
+        function calculateTrend(values) {
+            const first = values[0];
+            const last = values[values.length - 1];
+            const change = ((last - first) / first * 100).toFixed(2);
+            const direction = change >= 0 ? '📈' : '📉';
+            return `${direction} ${change > 0 ? '+' : ''}${change}% (从 ${first.toLocaleString()} 到 ${last.toLocaleString()})`;
+        }
+
+        // AI响应展示
+        function showAIResponse(html) {
+            const container = document.getElementById('aiResponse');
+            container.innerHTML = `<div style="line-height: 1.8;">${html}</div>`;
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('productFilter').value = '';
+            document.getElementById('dimensionFilter').value = '';
+            document.getElementById('timeFilter').value = '';
+            filteredData = [...rawData];
+            renderAll();
+            showAIResponse("筛选条件已重置，显示全部数据。");
+        }
+
+        // 渲染所有组件
+        function renderAll() {
+            renderStats();
+            renderTable();
+            renderCharts();
+            renderReport();
+        }
+
+        // 渲染统计卡片
+        function renderStats() {
+            const container = document.getElementById('statsGrid');
+            const metrics = [
+                {
+                    icon: '📱',
+                    value: '3877.5万',
+                    label: '累计安装设备量',
+                    change: '+11.51%',
+                    positive: true,
+                    bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                },
+                {
+                    icon: '⚡',
+                    value: '945.7万',
+                    label: '累计激活设备量',
+                    change: '-0.14%',
+                    positive: false,
+                    bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                },
+                {
+                    icon: '🔥',
+                    value: '42.32%',
+                    label: '非影视场景活跃率',
+                    change: '-7.34%',
+                    positive: false,
+                    bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                },
+                {
+                    icon: '📊',
+                    value: '61.64%',
+                    label: '非影视场景留存率',
+                    change: '+18.47%',
+                    positive: true,
+                    bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                }
+            ];
+
+            container.innerHTML = metrics.map(m => `
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: ${m.bg}; color: white;">
+                        ${m.icon}
+                    </div>
+                    <div class="stat-value">${m.value}</div>
+                    <div class="stat-label">${m.label}</div>
+                    <div class="stat-change ${m.positive ? 'positive' : 'negative'}">
+                        ${m.positive ? '↑' : '↓'} ${m.change} vs 首周
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = filteredData.map(row => `
+                <tr>
+                    <td><span class="badge primary">${row['产品名称']}</span></td>
+                    <td><span class="badge success">${row['指标维度']}</span></td>
+                    <td>${row['指标名称']}</td>
+                    <td>${row['2026-02-23至2026-03-01']}</td>
+                    <td>${row['2026-03-02至2026-03-08']}</td>
+                    <td>${row['2026-03-09至2026-03-15']}</td>
+                    <td>${row['2026-03-16至2026-03-22']}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 渲染图表
+        function renderCharts() {
+            renderLineChart();
+            renderBarChart();
+            renderPieChart();
+            renderRadarChart();
+        }
+
+        // 折线图
+        function renderLineChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['2026-02-23至2026-03-01', '2026-03-02至2026-03-08', '2026-03-09至2026-03-15', '2026-03-16至2026-03-22'],
+                    datasets: [
+                        {
+                            label: '累计安装设备量（万）',
+                            data: [3477.42, 3828.25, 3851.60, 3877.49],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '累计激活设备量（万）',
+                            data: [947.11, 960.25, 932.64, 945.73],
+                            borderColor: '#f093fb',
+                            backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // 柱状图
+        function renderBarChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['累计安装设备量', '累计开机设备量', '累计激活设备量', '活跃设备量'],
+                    datasets: [{
+                        label: '最新周期 (2026-03-16至2026-03-22)',
+                        data: [3877.49, 1894.12, 945.73, 400.24],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(240, 147, 251, 0.8)',
+                            'rgba(79, 172, 254, 0.8)',
+                            'rgba(67, 233, 123, 0.8)'
+                        ],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 饼图
+        function renderPieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['达成指标', '接近目标', '未达成指标'],
+                    datasets: [{
+                        data: [3, 2, 1],
+                        backgroundColor: [
+                            '#48bb78',
+                            '#ed8936',
+                            '#f56565'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 雷达图
+        function renderRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['安装量增长', '激活率', '活跃率', '留存率', '人均交互'],
+                    datasets: [{
+                        label: '指标表现',
+                        data: [85, 92, 78, 88, 95],
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: '#667eea',
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // 渲染报告
+        function renderReport() {
+            const container = document.getElementById('reportContent');
+
+            const metrics = [
+                {
+                    name: '非影视场景活跃率',
+                    value: '42.32%',
+                    target: '45%',
+                    status: 'warning',
+                    trend: '↓下降7.34%'
+                },
+                {
+                    name: '非影视场景留存率',
+                    value: '61.64%',
+                    target: '55%',
+                    status: 'achieved',
+                    trend: '↑提升18.47%'
+                },
+                {
+                    name: '累计安装设备量',
+                    value: '3877.5万',
+                    target: '3500万',
+                    status: 'achieved',
+                    trend: '↑增长11.51%'
+                }
+            ];
+
+            let html = '<h4>📊 核心KSF指标达成情况</h4>';
+
+            metrics.forEach(m => {
+                html += `
+                    <div class="metric-item">
+                        <div>
+                            <div class="name">${m.name}</div>
+                            <div style="color: #718096; font-size: 13px; margin-top: 4px;">目标值: ${m.target} | ${m.trend}</div>
+                        </div>
+                        <div>
+                            <div class="value" style="color: ${m.status === 'achieved' ? '#48bb78' : '#ed8936'}">${m.value}</div>
+                            <span class="status ${m.status}">
+                                ${m.status === 'achieved' ? '✓ 已达成' : '⚠ 接近目标'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="margin-top: 30px;">
+                    <h4>💡 分析建议</h4>
+                    <ul>
+                        <li><strong>留存率表现优异</strong>：非影视场景留存率从52.03%提升至61.64%，达成率111.8%，建议继续保持并扩大优势</li>
+                        <li><strong>活跃率需关注</strong>：活跃率从45.67%下降至42.32%，低于45%目标值，需分析原因并制定提升策略</li>
+                        <li><strong>安装量稳步增长</strong>：累计安装设备量增长11.51%，用户基数持续扩大</li>
+                        <li><strong>智能体表现</strong>：爱宠类智能体（爱宠哈基米、爱宠乐乐）持续表现强劲，建议重点运营</li>
+                        <li><strong>数据洞察</strong>：第8-15周期各项指标有所波动，建议加强用户运营，提升活跃度和留存率</li>
+                    </ul>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 导出报告
+        function exportReport() {
+            const reportContent = document.getElementById('reportContent').innerText;
+            const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KSF指标分析报告_${new Date().toLocaleDateString()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 监听事件
+        document.getElementById('productFilter').addEventListener('change', filterData);
+        document.getElementById('dimensionFilter').addEventListener('change', filterData);
+        document.getElementById('timeFilter').addEventListener('change', filterData);
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', initData);
+    </script>
+</body>
+</html>
